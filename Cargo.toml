@@ -1,0 +1,7 @@
+[package]
+name = "find_raid"
+version = "0.1.0"
+authors = ["Peter Gerber <peter@arbitrary.ch>"]
+
+[dependencies]
+clippy = { version = "*", optional = true }
