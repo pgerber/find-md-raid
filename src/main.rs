@@ -19,7 +19,7 @@ where
         for byte in &buf[..size] {
             last_four_bytes = last_four_bytes >> 8 | (*byte as u32) << 24;
             if last_four_bytes == 0xa92b4efc {
-                println!("hit at byte {}", offset);
+                println!("hit at byte {}", offset - 3);
             }
             offset += 1;
         }
