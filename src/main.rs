@@ -45,7 +45,7 @@ fn print_hit(offset: usize, block: &[u8; 512]) {
 
     let timestamp = match version {
         0 => {
-            let secs = bytes::LittleEndian::read_u32(&block[24..29]);
+            let secs = bytes::LittleEndian::read_u32(&block[24..28]);
             fmt_timestamp(secs as i64, 0)
         }
         1 => {
