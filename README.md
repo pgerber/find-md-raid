@@ -10,12 +10,12 @@ can be found in the [official wiki](https://raid.wiki.kernel.org/index.php/RAID_
 ## Usage
 
 `find_raid` takes one argument, the path to the device to scan. It outputs the offsets of
-the magic number, the major metadata version, array name and creation timestamp.
+the metadata, the major metadata version, array name, and creation and update timestamps.
 
 ```
 $ find_raid /dev/sda
-hit at byte 4096 (version: 1.x, name: "pg:5", creation time: 2017-08-07T17:45:03+02:00)
-hit at byte 31391744 (version: 0.x, name: unknown, creation time: 2017-08-06T05:58:33+02:00)
+hit at byte 4096 (version: 1.x, name: "pg:5", creation time: 2017-08-07T17:45:03+02:00, update time: 2017-08-07T18:12:15+02:00)
+hit at byte 31391744 (version: 0.x, name: unknown, creation time: 2017-08-06T05:58:33+02:00, update time: 2017-08-07T22:27:18+02:00)
 ```
 
 ## Caveats

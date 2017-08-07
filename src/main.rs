@@ -43,27 +43,46 @@ fn print_hit(offset: usize, block: &[u8; 512]) {
         _ => "unknown".to_string(),
     };
 
-    let timestamp = match version {
+    let ctime = match version {
         0 => {
             let secs = bytes::LittleEndian::read_u32(&block[24..28]);
             fmt_timestamp(secs as i64, 0)
         }
         1 => {
-            let raw = bytes::LittleEndian::read_u64(&block[64..72]);
-            let secs = raw & 0xff_ffff_ffff;
-            let nsecs = (raw >> 40) * 1000;
-            fmt_timestamp(secs as i64, nsecs as u32)
+            let (secs, nsecs) = extract_64bit_timestamp(&block[64..72]);
+            fmt_timestamp(secs, nsecs)
+        }
+        _ => "unknown".to_string(),
+    };
+
+    let utime = match version {
+        0 => {
+            let secs = bytes::LittleEndian::read_u32(&block[128..132]);
+            fmt_timestamp(secs as i64, 0)
+        }
+        1 => {
+            let (secs, nsecs) = extract_64bit_timestamp(&block[192..200]);
+            fmt_timestamp(secs, nsecs)
         }
         _ => "unknown".to_string(),
     };
 
     println!(
-        "hit at byte {} (version: {}.x, name: {}, creation time: {})",
+        "hit at byte {} (version: {}.x, name: {}, creation time: {}, update time: {})",
         offset,
         version,
         name,
-        timestamp
+        ctime,
+        utime
     );
+}
+
+fn extract_64bit_timestamp(stamp: &[u8]) -> (i64, u32) {
+    debug_assert_eq!(stamp.len(), 8);
+    let raw = bytes::LittleEndian::read_u64(stamp);
+    let secs = raw & 0xff_ffff_ffff;
+    let nsecs = (raw >> 40) * 1000;
+    (secs as i64, nsecs as u32)
 }
 
 fn fmt_timestamp(secs: i64, nsecs: u32) -> String {
