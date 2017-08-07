@@ -4,25 +4,21 @@ I used this to find the partition boundaries on a disk with a corrupted partitio
 Based on the offset you should be able to calculate the partition boundaries.
 
 The location of the metadata varies depending on the metadata version. Take a look at
---metadata section of mdadm's manpage.
+--metadata section of mdadm's manpage. A more detailed description of the metadata layout
+can be found in the [official wiki](https://raid.wiki.kernel.org/index.php/RAID_superblock_formats).
 
 ## Usage
 
 `find_raid` takes one argument, the path to the device to scan. It outputs the offsets of
-the found magic numbers.
+the magic number, the major metadata version, array name and creation timestamp.
 
 ```
-    $ find_raid /dev/sda
-    hit at byte 1052672
-    hit at byte 7999590400
-    hit at byte 11551875072
-    hit at byte 24862347264
-    hit at byte 26261688320
-    hit at byte 29180690432
-
+$ find_raid /dev/sda
+hit at byte 4096 (version: 1.x, name: "pg:5", creation time: 2017-08-07T17:45:03+02:00)
+hit at byte 31391744 (version: 0.x, name: unknown, creation time: 2017-08-06T05:58:33+02:00)
 ```
 
-## Ceveats
+## Caveats
 
 * You'll likely get false positives. The magic number is assumed to be aligned at
   512-bit boundaries which help to reduce the number of false positive but you'll still

@@ -4,4 +4,6 @@ version = "0.1.0"
 authors = ["Peter Gerber <peter@arbitrary.ch>"]
 
 [dependencies]
+bytes = "0.4"
+chrono = "0.4"
 clippy = { version = "*", optional = true }
