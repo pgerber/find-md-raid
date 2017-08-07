@@ -1,4 +1,5 @@
 use std::{env, fs, io, process};
+use std::io::Read;
 
 /// Find Linux md raid magic number 0xa92b4efc.
 ///
@@ -7,24 +8,21 @@ fn search<S>(stream: &mut S) -> io::Result<()>
 where
     S: io::Read + io::Seek,
 {
-    let mut buf = [0; 1024 * 1024];
-    let mut last_four_bytes = 0_u32;
+    let mut buf = [0; 512];
     let mut offset = 0_usize;
+    let mut buf_stream = io::BufReader::with_capacity(1048576, stream);
 
     loop {
-        let size = stream.read(&mut buf)?;
-        if size == 0 {
-            break;
+        match buf_stream.read_exact(&mut buf) {
+            Err(ref e) if e.kind() == io::ErrorKind::UnexpectedEof => break Ok(()),
+            e @ Err(_) => break e,
+            Ok(()) => (),
         }
-        for byte in &buf[..size] {
-            last_four_bytes = last_four_bytes >> 8 | (*byte as u32) << 24;
-            if last_four_bytes == 0xa92b4efc {
-                println!("hit at byte {}", offset - 3);
-            }
-            offset += 1;
+        if buf.starts_with(&[0xfc, 0x4e, 0x2b, 0xa9]) {
+            println!("hit at byte {}", offset);
         }
+        offset += buf.len();
     }
-    Ok(())
 }
 
 fn main() {
