@@ -1,4 +1,4 @@
-# Find Linux MD Raid Magic Number on a Disk
+# Find Linux MD Raid Metadata on a Disk
 
 I used this to find the partition boundaries on a disk with a corrupted partition table.
 Based on the offset you should be able to calculate the partition boundaries.
@@ -15,7 +15,7 @@ the metadata, the major metadata version, array name, and creation and update ti
 ```
 $ find_raid /dev/sda
 hit at byte 4096 (version: 1.x, name: "pg:5", creation time: 2017-08-07T17:45:03+02:00, update time: 2017-08-07T18:12:15+02:00)
-hit at byte 31391744 (version: 0.x, name: unknown, creation time: 2017-08-06T05:58:33+02:00, update time: 2017-08-07T22:27:18+02:00)
+hit at byte 31391744 (version: 0.90.0, name: unknown, creation time: 2017-08-06T05:58:33+02:00, update time: 2017-08-07T22:27:18+02:00)
 ```
 
 ## Caveats
@@ -23,5 +23,7 @@ hit at byte 31391744 (version: 0.x, name: unknown, creation time: 2017-08-06T05:
 * You'll likely get false positives. The magic number is assumed to be aligned at
   512-bit boundaries which help to reduce the number of false positive but you'll still
   encounter them.
-* The code assumes the magic number is 0xa92b4efc represented in little-endian. I've
-  not verified that this is always the case.
+* In case of version 1.x metadata the minor version number isn't available. This because the minor version isn't stored
+  in the metadata but rather depends on the location of the metadata.
+* The code assumes the magic number is 0xa92b4efc represented in little-endian. However, version 0.90 uses the native
+  endianess. Hence, v0.90 metadata is not found on big-endian systems.

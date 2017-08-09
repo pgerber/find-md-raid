@@ -1,7 +1,7 @@
 extern crate bytes;
 extern crate chrono;
 
-use bytes::ByteOrder;
+use bytes::{ByteOrder, LittleEndian};
 use std::{env, fs, io, process};
 use std::io::Read;
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
@@ -31,10 +31,10 @@ where
 }
 
 fn print_hit(offset: usize, block: &[u8; 512]) {
-    let version = bytes::LittleEndian::read_u32(&block[4..8]);
+    let version = extract_version(block);
 
     let name = match version {
-        1 => {
+        (1, _, _) => {
             let mut n = vec![b'"'];
             n.extend(block[32..64].iter().cloned().take_while(|&c| c != b'\0'));
             n.push(b'"');
@@ -44,11 +44,11 @@ fn print_hit(offset: usize, block: &[u8; 512]) {
     };
 
     let ctime = match version {
-        0 => {
-            let secs = bytes::LittleEndian::read_u32(&block[24..28]);
+        (0, Some(90), _) => {
+            let secs = LittleEndian::read_u32(&block[24..28]);
             fmt_timestamp(secs as i64, 0)
         }
-        1 => {
+        (1, _, _) => {
             let (secs, nsecs) = extract_64bit_timestamp(&block[64..72]);
             fmt_timestamp(secs, nsecs)
         }
@@ -56,11 +56,11 @@ fn print_hit(offset: usize, block: &[u8; 512]) {
     };
 
     let utime = match version {
-        0 => {
-            let secs = bytes::LittleEndian::read_u32(&block[128..132]);
+        (0, Some(90), _) => {
+            let secs = LittleEndian::read_u32(&block[128..132]);
             fmt_timestamp(secs as i64, 0)
         }
-        1 => {
+        (1, _, _) => {
             let (secs, nsecs) = extract_64bit_timestamp(&block[192..200]);
             fmt_timestamp(secs, nsecs)
         }
@@ -68,18 +68,40 @@ fn print_hit(offset: usize, block: &[u8; 512]) {
     };
 
     println!(
-        "hit at byte {} (version: {}.x, name: {}, creation time: {}, update time: {})",
+        "hit at byte {} (version: {}, name: {}, creation time: {}, update time: {})",
         offset,
-        version,
+        version_string(version),
         name,
         ctime,
         utime
     );
 }
 
+fn version_string(version: (u32, Option<u32>, Option<u32>)) -> String {
+    match version {
+        (major, Some(minor), Some(patch)) => format!("{}.{}.{}", major, minor, patch),
+        (major, _, _) => format!("{}.x", major),
+    }
+}
+
+fn extract_version(data: &[u8; 512]) -> (u32, Option<u32>, Option<u32>) {
+    let major = LittleEndian::read_u32(&data[4..8]);
+    let minor = if major == 0 {
+        Some(LittleEndian::read_u32(&data[8..12]))
+    } else {
+        None
+    };
+    let patch = if major == 0 {
+        Some(LittleEndian::read_u32(&data[12..16]))
+    } else {
+        None
+    };
+    (major, minor, patch)
+}
+
 fn extract_64bit_timestamp(stamp: &[u8]) -> (i64, u32) {
     debug_assert_eq!(stamp.len(), 8);
-    let raw = bytes::LittleEndian::read_u64(stamp);
+    let raw = LittleEndian::read_u64(stamp);
     let secs = raw & 0xff_ffff_ffff;
     let nsecs = (raw >> 40) * 1000;
     (secs as i64, nsecs as u32)
