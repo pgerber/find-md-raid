@@ -25,5 +25,5 @@ hit at byte 31391744 (version: 0.90.0, name: unknown, creation time: 2017-08-06T
   encounter them.
 * In case of version 1.x metadata the minor version number isn't available. This because the minor version isn't stored
   in the metadata but rather depends on the location of the metadata.
-* The code assumes the magic number is 0xa92b4efc represented in little-endian. However, version 0.90 uses the native
-  endianess. Hence, v0.90 metadata is not found on big-endian systems.
+* Metadata of version 0.x uses native-endian while 1.x metadata uses little-endian. By default big-endian support is only
+  enabled on big-endian platforms. Use the `big_endian` feature gate to force enable it (`cargo build --features big_endian`).
