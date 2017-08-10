@@ -9,7 +9,7 @@ use chrono::{DateTime, Local, NaiveDateTime, Utc};
 #[derive(Clone, Copy, PartialEq)]
 enum Endian {
     Little,
-    Big
+    Big,
 }
 
 /// Find Linux md raid magic number 0xa92b4efc.
@@ -34,7 +34,9 @@ where
         }
 
         // version 0.9 metadata uses big-endian representation on big-endian systems.
-        if cfg!(any(target_endian = "big", feature = "big_endian")) && buf.starts_with(&[0xa9, 0x2b, 0x4e, 0xfc]) {
+        if cfg!(any(target_endian = "big", feature = "big_endian")) &&
+            buf.starts_with(&[0xa9, 0x2b, 0x4e, 0xfc])
+        {
             print_hit(offset, &buf, Endian::Big);
         }
         offset += buf.len();
@@ -44,8 +46,10 @@ where
 fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
     let version = extract_version(block, endianess);
 
-    if cfg!(any(target_endian = "big", feature = "big_endian")) && endianess == Endian::Big && version.0 != 0 {
-        return // not valid metadata, only 0.x may be big-endian
+    if cfg!(any(target_endian = "big", feature = "big_endian")) && endianess == Endian::Big &&
+        version.0 != 0
+    {
+        return; // not valid metadata, only 0.x may be big-endian
     };
 
     let name = match version {
@@ -62,7 +66,7 @@ fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
         (0, Some(90), _) => {
             let secs = match endianess {
                 Endian::Big => BigEndian::read_u32(&block[24..28]),
-                Endian::Little => LittleEndian::read_u32(&block[24..28])
+                Endian::Little => LittleEndian::read_u32(&block[24..28]),
             };
             fmt_timestamp(secs as i64, 0)
         }
@@ -77,7 +81,7 @@ fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
         (0, Some(90), _) => {
             let secs = match endianess {
                 Endian::Big => BigEndian::read_u32(&block[24..28]),
-                Endian::Little => LittleEndian::read_u32(&block[24..28])
+                Endian::Little => LittleEndian::read_u32(&block[24..28]),
             };
             fmt_timestamp(secs as i64, 0)
         }
@@ -106,17 +110,23 @@ fn version_string(version: (u32, Option<u32>, Option<u32>)) -> String {
 }
 
 fn extract_version(data: &[u8; 512], endianess: Endian) -> (u32, Option<u32>, Option<u32>) {
-    let major = LittleEndian::read_u32(&data[4..8]);
+    let major = match endianess {
+        Endian::Big => BigEndian::read_u32(&data[4..8]),
+        Endian::Little => LittleEndian::read_u32(&data[4..8]),
+    };
     let minor = if major == 0 {
         match endianess {
             Endian::Big => Some(BigEndian::read_u32(&data[8..12])),
-            Endian::Little => Some(LittleEndian::read_u32(&data[8..12]))
+            Endian::Little => Some(LittleEndian::read_u32(&data[8..12])),
         }
     } else {
         None
     };
     let patch = if major == 0 {
-        Some(LittleEndian::read_u32(&data[12..16]))
+        match endianess {
+            Endian::Big => Some(BigEndian::read_u32(&data[12..16])),
+            Endian::Little => Some(LittleEndian::read_u32(&data[12..16])),
+        }
     } else {
         None
     };
