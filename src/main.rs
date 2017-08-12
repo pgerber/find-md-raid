@@ -13,8 +13,6 @@ enum Endian {
 }
 
 /// Find Linux md raid magic number 0xa92b4efc.
-///
-/// The magic number is stored in little endian representation.
 fn search<S>(stream: &mut S) -> io::Result<()>
 where
     S: io::Read + io::Seek,
@@ -29,11 +27,13 @@ where
             e @ Err(_) => break e,
             Ok(()) => (),
         }
+
+        // Version 1.x metadata uses little-endian and so does v0.90 metadata on little-endian platforms
         if buf.starts_with(&[0xfc, 0x4e, 0x2b, 0xa9]) {
             print_hit(offset, &buf, Endian::Little);
         }
 
-        // version 0.9 metadata uses big-endian representation on big-endian systems.
+        // Version 0.90 metadata uses big-endian representation on big-endian systems.
         if cfg!(any(target_endian = "big", feature = "big_endian")) &&
             buf.starts_with(&[0xa9, 0x2b, 0x4e, 0xfc])
         {
