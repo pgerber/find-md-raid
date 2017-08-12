@@ -1,5 +1,7 @@
 # Find Linux MD Raid Metadata on a Disk
 
+[![Build Status](https://travis-ci.org/pgerber/find-md-raid.svg?branch=master)](https://travis-ci.org/pgerber/find-md-raid)
+
 I used this to find the partition boundaries on a disk with a corrupted partition table.
 Based on the offset you should be able to calculate the partition boundaries.
 
@@ -17,6 +19,15 @@ $ find_raid /dev/sda
 hit at byte 4096 (version: 1.x, name: "pg:5", creation time: 2017-08-07T17:45:03+02:00, update time: 2017-08-07T18:12:15+02:00)
 hit at byte 31391744 (version: 0.90.0, name: unknown, creation time: 2017-08-06T05:58:33+02:00, update time: 2017-08-07T22:27:18+02:00)
 ```
+
+## Offsets
+
+As far as I have observed the metadata is positioned as follows:
+
+* **v0.90** → metadata starts 65536 bytes before end
+* **v1.0** → metadata starts 8192 bytes before end
+* **v1.1** → metadata starts at byte 0
+* **v1.2** → metadata starts at byte 4196
 
 ## Caveats
 

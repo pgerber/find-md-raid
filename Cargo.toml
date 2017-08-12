@@ -2,6 +2,7 @@
 name = "find_raid"
 version = "0.1.0"
 authors = ["Peter Gerber <peter@arbitrary.ch>"]
+exclude = ["testdata/**"]
 
 [dependencies]
 bytes = "0.4"
