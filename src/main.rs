@@ -4,7 +4,7 @@ extern crate chrono;
 use bytes::{BigEndian, ByteOrder, LittleEndian};
 use std::{env, fs, io, process};
 use std::io::Read;
-use chrono::{DateTime, Local, NaiveDateTime, Utc};
+use chrono::{Local, TimeZone};
 
 #[derive(Clone, Copy, PartialEq)]
 enum Endian {
@@ -28,7 +28,8 @@ where
             Ok(()) => (),
         }
 
-        // Version 1.x metadata uses little-endian and so does v0.90 metadata on little-endian platforms
+        // Version 1.x metadata uses little-endian and so does v0.90 metadata on little-endian
+        // platforms
         if buf.starts_with(&[0xfc, 0x4e, 0x2b, 0xa9]) {
             print_hit(offset, &buf, Endian::Little);
         }
@@ -142,12 +143,9 @@ fn extract_64bit_timestamp(stamp: &[u8]) -> (i64, u32) {
 }
 
 fn fmt_timestamp(secs: i64, nsecs: u32) -> String {
-    if let Some(ts) = NaiveDateTime::from_timestamp_opt(secs as i64, nsecs as u32) {
-        let ts = DateTime::<Utc>::from_utc(ts, Utc);
-        let ts = ts.with_timezone(&Local);
-        ts.to_rfc3339()
-    } else {
-        "invalid".to_string()
+    match Local.timestamp_opt(secs, nsecs).earliest() {
+        Some(ts) => ts.to_rfc3339(),
+        None => "invalid".to_string(),
     }
 }
 
