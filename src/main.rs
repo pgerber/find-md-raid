@@ -2,7 +2,7 @@ extern crate bytes;
 extern crate chrono;
 
 use bytes::{BigEndian, ByteOrder, LittleEndian};
-use std::{env, fs, io, process};
+use std::{env, fmt, fs, io, process};
 use std::io::Read;
 use chrono::{Local, TimeZone};
 
@@ -10,6 +10,15 @@ use chrono::{Local, TimeZone};
 enum Endian {
     Little,
     Big,
+}
+
+impl fmt::Display for Endian {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Endian::Little => write!(f, "little"),
+            Endian::Big => write!(f, "big"),
+        }
+    }
 }
 
 /// Find Linux md raid magic number 0xa92b4efc.
@@ -93,14 +102,18 @@ fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
         _ => "unknown".to_string(),
     };
 
-    println!(
-        "hit at byte {} (version: {}, name: {}, creation time: {}, update time: {})",
+    print!(
+        "hit at byte {} (version: {}, name: {}, creation time: {}, update time: {}",
         offset,
         version_string(version),
         name,
         ctime,
-        utime
+        utime,
     );
+    if cfg!(any(target_endian = "big", feature = "big_endian")) && version.0 == 0 {
+        print!(", endianess: {}", endianess);
+    }
+    println!(")");
 }
 
 fn version_string(version: (u32, Option<u32>, Option<u32>)) -> String {
