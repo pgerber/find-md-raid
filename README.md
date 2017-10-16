@@ -32,9 +32,9 @@ As far as I have observed the metadata is positioned as follows:
 ## Caveats
 
 * You'll likely get false positives. The magic number is assumed to be aligned at
-  512-bit boundaries which help to reduce the number of false positive but you'll still
+  512-bit boundaries which helps to reduce the number of false positives but you'll still
   encounter them.
-* In case of version 1.x metadata the minor version number isn't available. This because the minor version isn't stored
+* In case of version 1.x metadata, the minor version number isn't available. This because the minor version isn't stored
   in the metadata but rather depends on the location of the metadata.
 * Metadata of version 0.x uses native-endian while 1.x metadata uses little-endian. By default big-endian support is only
   enabled on big-endian platforms. Use the `big_endian` feature gate to force enable it (`cargo build --features big_endian`).
