@@ -28,7 +28,7 @@ where
 {
     let mut buf = [0; 512];
     let mut offset = 0_usize;
-    let mut buf_stream = io::BufReader::with_capacity(1048576, stream);
+    let mut buf_stream = io::BufReader::with_capacity(1_048_576, stream);
 
     loop {
         match buf_stream.read_exact(&mut buf) {
@@ -44,8 +44,8 @@ where
         }
 
         // Version 0.90 metadata uses big-endian representation on big-endian systems.
-        if cfg!(any(target_endian = "big", feature = "big_endian")) &&
-            buf.starts_with(&[0xa9, 0x2b, 0x4e, 0xfc])
+        if cfg!(any(target_endian = "big", feature = "big_endian"))
+            && buf.starts_with(&[0xa9, 0x2b, 0x4e, 0xfc])
         {
             print_hit(offset, &buf, Endian::Big);
         }
@@ -56,8 +56,8 @@ where
 fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
     let version = extract_version(block, endianess);
 
-    if cfg!(any(target_endian = "big", feature = "big_endian")) && endianess == Endian::Big &&
-        version.0 != 0
+    if cfg!(any(target_endian = "big", feature = "big_endian")) && endianess == Endian::Big
+        && version.0 != 0
     {
         return; // not valid metadata, only 0.x may be big-endian
     };
@@ -78,7 +78,7 @@ fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
                 Endian::Big => BigEndian::read_u32(&block[24..28]),
                 Endian::Little => LittleEndian::read_u32(&block[24..28]),
             };
-            fmt_timestamp(secs as i64, 0)
+            fmt_timestamp(i64::from(secs), 0)
         }
         (1, _, _) => {
             let (secs, nsecs) = extract_64bit_timestamp(&block[64..72]);
@@ -93,7 +93,7 @@ fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
                 Endian::Big => BigEndian::read_u32(&block[24..28]),
                 Endian::Little => LittleEndian::read_u32(&block[24..28]),
             };
-            fmt_timestamp(secs as i64, 0)
+            fmt_timestamp(i64::from(secs), 0)
         }
         (1, _, _) => {
             let (secs, nsecs) = extract_64bit_timestamp(&block[192..200]);
