@@ -27,7 +27,7 @@ where
     S: io::Read + io::Seek,
 {
     let mut buf = [0; 512];
-    let mut offset = 0_usize;
+    let mut offset = 0_u64;
     let mut buf_stream = io::BufReader::with_capacity(1_048_576, stream);
 
     loop {
@@ -49,11 +49,11 @@ where
         {
             print_hit(offset, &buf, Endian::Big);
         }
-        offset += buf.len();
+        offset += buf.len() as u64;
     }
 }
 
-fn print_hit(offset: usize, block: &[u8; 512], endianess: Endian) {
+fn print_hit(offset: u64, block: &[u8; 512], endianess: Endian) {
     let version = extract_version(block, endianess);
 
     if cfg!(any(target_endian = "big", feature = "big_endian")) && endianess == Endian::Big
